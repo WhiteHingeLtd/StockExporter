@@ -102,14 +102,15 @@ SELECT
     d.additionalinfo as 'PickStockLevel',
     (e.stock + e.stockminimum) as 'LinnworksStock',
     (c.whltotal-(e.stock + e.stockminimum)) as 'StockDiff',
-    f.weekly as 'Weekly'
+    f.weekly as 'Weekly',
+    ((c.whltotal-(e.stock + e.stockminimum))*g.SupplierPricePer) as 'DifferenceNet'
 FROM whldata.whlnew as a
 LEFT JOIN (SELECT Sku, Sum(additionalinfo*CAST(substring(sku,8,4) as signed integer)) as 'whltotal' from whldata.sku_locations group by substring(sku,1,7)) as c on a.Sku=c.sku
 LEFT JOIN (SELECT Sku, Shelfname, Sum(additionalinfo*CAST(substring(sku,8,4) as signed integer)) as additionalinfo FROM whldata.sku_locations JOIN whldata.locationreference on sku_locations.LocationRefID=locationreference.LocID WHERE LocType=1 Group by substring(sku,1,7)) as d on a.Sku=d.Sku
 LEFT JOIN whldata.inventory as e on a.Sku=e.Sku
 LEFT JOIN (SELECT Sku, SUBSTRING(Sku,1,7) as Shortsku, SUM(Weighted8Week*CAST(SUBSTRING(Sku,8,4) as SIGNED INTEGER)) as weekly FROM whldata.salesdata GROUP BY SUBSTRING(Sku,1,7)) as f on a.Shortsku=F.Shortsku
+LEFT JOIN (SELECT * FROM whldata.Sku_Supplierdata WHERE isPrimary='True' GROUP BY sku) as g on a.shortsku = g.Sku
 WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.IsBundle='True') AND (HasBeenListed='True' or New_Status='Exported') AND  ( a.sku LIKE '%0001');
-
 
 ")
 
@@ -124,6 +125,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
         Fields.Add("LinnworksTotal")
         Fields.Add("Difference")
         Fields.Add("WeeklySales")
+        Fields.Add("Net_Difference")
         For I As Integer = 1 To Iterates
             Fields.Add("Shelf_" + I.ToString)
             Fields.Add("Stocklevel_" + i.tostring)
@@ -153,6 +155,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
             NewRow("LinnworksTotal") = Sku("LinnworksStock")
             NewRow("Difference") = Sku("StockDiff")
             NewRow("WeeklySales") = Sku("Weekly")
+            NewRow("Net_Difference") = Sku("DifferenceNet")
             'Gte the locations which apply
             Dim RelevantLocations As List(Of Dictionary(Of String, Object)) = Locations.Where(Function(x As Dictionary(Of String, Object)) x("Sku") = Sku("Sku")).ToList
             RelevantLocations.Sort(Function(x As Dictionary(Of String, Object), y As Dictionary(Of String, Object)) x("type").CompareTo(y("type")))
