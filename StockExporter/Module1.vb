@@ -16,7 +16,7 @@ Module Module1
         dim rawcsv as String = ""
         rawcsv += String.Join(",", Data(0).Keys)
         My.Computer.FileSystem.WriteAllText(Filename, rawcsv, False)
-        rawcsv = ""
+        rawcsv = "" + vbNewLine
         Console.WriteLine("Writing data")
         Dim i As Integer = 0
         For Each row As Dictionary(Of String, Object) In Data
