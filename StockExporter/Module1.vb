@@ -14,7 +14,6 @@ Module Module1
 
     Private Sub SaveCSV(Data As  List(Of Dictionary(Of String, Object)), Filename as String )
         dim rawcsv as String = ""
-
         rawcsv += String.Join(",", Data(0).Keys)
         My.Computer.FileSystem.WriteAllText(Filename, rawcsv, False)
         rawcsv = ""
@@ -25,67 +24,42 @@ Module Module1
             i += 1
             'sender.ReportProgress((i / Data.Count) * 100)
             'T("Prog")
-            rawcsv += vbNewLine
-
-
-            If rawcsv.Length > 10240 Then
-                rawcsv = rawcsv.Replace("\", "\\").Replace("""", """""").Replace("," + vbNewLine, vbNewLine).Replace("§", """")
-                try
-                    My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-                    rawcsv = ""
-                Catch ex As Exception
-                    Console.WriteLine("File in use, delaying save")
-                End Try
-            End If
             
-            'T("LineStart")
+
             For Each value In row.Values
                 If IsNothing(value)
                     rawcsv += ","
                 Else 
                     If value.ToString.Contains(",") Or value.ToString.Contains("""") Or value.ToString.Contains(vbNewLine) Or value.ToString.StartsWith(" ") Or value.ToString.EndsWith(" ") Then
-                    rawcsv += "§" + value.ToString.Replace(vbNewLine, "") + "§,"
-                Else
-                    rawcsv += value.ToString.Replace(vbNewLine, "") + ","
-                End If
+                        rawcsv += "§" + value.ToString.Replace(vbNewLine, "") + "§,"
+                    Else
+                        rawcsv += value.ToString.Replace(vbNewLine, "") + ","
+                    End If
                 End If
                 
             Next
+            rawcsv += vbNewLine
+            If rawcsv.Length > 10240 Or i > (data.Count - 1)
+                Dim success = false
+                Console.WriteLine(rawcsv.Length)
+                rawcsv = rawcsv.Replace("\", "\\").Replace("""", """""").Replace("," + vbNewLine, vbNewLine).Replace("§", """")
+                While(not success)
+                    try
+                        My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
+                        rawcsv = ""
+                        success = true
+                    Catch ex As Exception
+                        Console.WriteLine("File in use, delaying save")
+                    End Try
+                End While
+            end if
+
+            'T("LineStart")
+
             'T("Linedone")
         Next
-        rawcsv = rawcsv.Replace("\", "\\").Replace("""", """""").Replace("," + vbNewLine, vbNewLine).Replace("§", """")
-        'sender.ReportProgress(100, "Saving file")
-        try
-            My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-        Catch ex As Exception
-            Console.WriteLine("File in use, delaying save")
-            Threading.Thread.Sleep("20000")
-            try
-            My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-        Catch ex2 As Exception
-                Console.WriteLine("File in use, delaying save")
-            Threading.Thread.Sleep("20000")
-                try
-            My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-        Catch ex3 As Exception
-                    Console.WriteLine("File in use, delaying save")
-            Threading.Thread.Sleep("20000")
-                    try
-            My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-        Catch ex4 As Exception
-                        Console.WriteLine("File in use, delaying save")
-            Threading.Thread.Sleep("20000")
-                        try
-            My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-        Catch ex5 As Exception
-                            Console.WriteLine("File in use, Giving Up")
-        End Try
-        End Try
-        End Try
-        End Try
-        End Try
-        My.Computer.FileSystem.WriteAllText(Filename, rawcsv, True)
-        Console.WriteLine("""" + Filename + """ Written.")
+        Dim saved = False
+
     End Sub
 
     Private Sub LocationsWithStockProdutProxy()
