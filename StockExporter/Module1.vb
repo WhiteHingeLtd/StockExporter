@@ -101,12 +101,15 @@ SELECT
     d.Shelfname as 'PickLocation',
     d.additionalinfo as 'PickStockLevel',
     (e.stock + e.stockminimum) as 'LinnworksStock',
-    (c.whltotal-(e.stock + e.stockminimum)) as 'StockDiff'
+    (c.whltotal-(e.stock + e.stockminimum)) as 'StockDiff',
+    f.weekly as 'Weekly'
 FROM whldata.whlnew as a
 LEFT JOIN (SELECT Sku, Sum(additionalinfo*CAST(substring(sku,8,4) as signed integer)) as 'whltotal' from whldata.sku_locations group by substring(sku,1,7)) as c on a.Sku=c.sku
 LEFT JOIN (SELECT Sku, Shelfname, Sum(additionalinfo*CAST(substring(sku,8,4) as signed integer)) as additionalinfo FROM whldata.sku_locations JOIN whldata.locationreference on sku_locations.LocationRefID=locationreference.LocID WHERE LocType=1 Group by substring(sku,1,7)) as d on a.Sku=d.Sku
 LEFT JOIN whldata.inventory as e on a.Sku=e.Sku
+LEFT JOIN (SELECT Sku, SUBSTRING(Sku,1,7) as Shortsku, SUM(Weighted8Week*CAST(SUBSTRING(Sku,8,4) as SIGNED INTEGER)) as weekly FROM whldata.salesdata GROUP BY SUBSTRING(Sku,1,7)) as f on a.Shortsku=F.Shortsku
 WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.IsBundle='True') AND (HasBeenListed='True' or New_Status='Exported') AND  ( a.sku LIKE '%0001');
+
 
 ")
 
@@ -120,9 +123,10 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
         Fields.Add("PickStock")
         Fields.Add("LinnworksTotal")
         Fields.Add("Difference")
+        Fields.Add("WeeklySales")
         For I As Integer = 1 To Iterates
             Fields.Add("Shelf_" + I.ToString)
-            'Fields.Add("Stocklevel_" + i.tostring)
+            Fields.Add("Stocklevel_" + i.tostring)
         Next
 
         Dim data As New List(Of Dictionary(Of String, Object))
@@ -148,6 +152,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
             NewRow("PickStock") = Sku("PickStockLevel")
             NewRow("LinnworksTotal") = Sku("LinnworksStock")
             NewRow("Difference") = Sku("StockDiff")
+            NewRow("WeeklySales") = Sku("Weekly")
             'Gte the locations which apply
             Dim RelevantLocations As List(Of Dictionary(Of String, Object)) = Locations.Where(Function(x As Dictionary(Of String, Object)) x("Sku") = Sku("Sku")).ToList
             RelevantLocations.Sort(Function(x As Dictionary(Of String, Object), y As Dictionary(Of String, Object)) x("type").CompareTo(y("type")))
@@ -155,7 +160,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
             For Each Location As Dictionary(Of String, Object) In RelevantLocations
                 LocationNumber += 1
                 NewRow("Shelf_" + LocationNumber.ToString) = Location("shelfname")
-                'NewRow("Stocklevel_" + locationNumber.tostring) = Location("additionalInfo")
+                NewRow("Stocklevel_" + locationNumber.tostring) = Location("additionalinfo")
             Next
             data.Add(NewRow)
         Next
