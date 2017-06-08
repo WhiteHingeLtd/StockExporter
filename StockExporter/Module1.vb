@@ -158,11 +158,13 @@ SELECT
     c.whltotal as 'Stock_Total',  
     d.Shelfname as 'PickLocation',
     d.additionalinfo as 'PickStockLevel',
-    e.ow_isprepackfinalfinal as 'Packdown'
+    e.ow_isprepackfinalfinal as 'Packdown',
+    f.weighted8week as 'WeeklySales'
 FROM whldata.whlnew as a
 LEFT JOIN (SELECT Sku, Sum(additionalinfo) as 'whltotal' from whldata.sku_locations group by sku) as c on a.Sku=c.sku
 LEFT JOIN (SELECT Sku, Shelfname, additionalinfo FROM whldata.sku_locations JOIN whldata.locationreference on sku_locations.LocationRefID=locationreference.LocID WHERE LocType=1 Group by sku) as d on a.Sku=d.Sku
 LEFT JOIN whldata.orderwise_data as e on a.Sku=e.Sku
+LEFT JOIN whldata.salesdata as f on a.Sku=f.sku
 WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.IsBundle='True') AND (HasBeenListed='True' or New_Status='Exported') AND  (Not a.sku LIKE '%xxxx');
 
 ")
@@ -176,6 +178,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
         Fields.Add("PickLocation")
         Fields.Add("PickStock")
         Fields.Add("Packdown")
+        Fields.Add("WeeklySales")
         For I as Integer = 1 to iterates
             Fields.Add("Shelf_" + i.tostring)
             Fields.Add("Stocklevel_" + i.tostring)
@@ -203,6 +206,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
             NewRow("PickLocation") = sku("PickLocation")
             NewRow("PickStock") = Sku("PickStockLevel")
             NewRow("Packdown") = Sku("Packdown")
+            NewRow("WeeklySales") = Sku("WeeklySales")
             'Gte the locations which apply
             Dim RelevantLocations As List(Of Dictionary(Of String, Object)) = Locations.Where(Function(x as Dictionary(Of String, Object)) x("Sku")=Sku("Sku")).ToList
             RelevantLocations.Sort(Function(x As Dictionary(Of String, Object), y As Dictionary(Of String, Object)) x("type").CompareTo(y("type")))
