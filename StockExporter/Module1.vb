@@ -142,9 +142,8 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
             data.Add(NewRow)
         Next
         'And now we can feed it in!
-        Dim filename = "C:\Data Storage\Shared Data\Reporting\StockCount\Replenishment_Products_"+Now.ToString("yyyy-MM-dd_HHmm") + ".csv"
         Console.WriteLine("Saving Data File.")
-        SaveCSV(data, filename)
+        SaveCSV(data, "C:\Data Storage\Shared Data\Reporting\Replenishment_Products.csv")
     End Sub
 
     Private Sub LocationsWithStockVariantProxy()
@@ -221,6 +220,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
         Next
         'And now we can feed it in!
         Console.WriteLine("Saving Data File.")
-        SaveCSV(data, "C:\Data Storage\Shared Data\Reporting\StockCount\Replenishment_Variants_"+Now.ToString("yyyy-MM-dd_HHmm") + ".csv")
+        SaveCSV(data, "C:\Data Storage\Shared Data\Reporting\Replenishment_Variants.csv")
     End Sub
+
 End Module
