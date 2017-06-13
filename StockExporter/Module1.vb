@@ -221,6 +221,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
         'And now we can feed it in!
         Console.WriteLine("Saving Data File.")
         SaveCSV(data, "C:\Data Storage\Shared Data\Reporting\Replenishment_Variants.csv")
+        SaveCsv(data, "C:\Data Storage\Shared Data\Reporting\StockCount\Stock_Count_"+Now.ToString("yyyy-MM-dd_HHmm")+".csv")
     End Sub
 
 End Module
