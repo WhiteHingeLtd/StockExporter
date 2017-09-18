@@ -65,13 +65,13 @@ Module Module1
     Private Sub LocationsWithStockProdutProxy()
         Console.WriteLine("=== PRODUCTS ===")
         Console.WriteLine("Starting Server Side Processing.")
-        Dim Iterates As Integer = MySQL.SelectDataDictionary("SELECT Count(*) as count FROM whldata.sku_locations Group BY Sku ORDER BY Count(*) DESC LIMIT 1;")(0)("count")
+        Dim Iterates As Integer = MySQL.SelectDataDictionary("SELECT Count(*) as count FROM whldata.shortsku_locations Group BY shortsku ORDER BY Count(*) DESC LIMIT 1;")(0)("count")
 
         Dim Skus As List(Of Dictionary(Of String, Object)) = MySQL.SelectDataDictionary("
-SELECT	
+SELECT
 	a.Sku,
     a.ItemTitle,
-    c.whltotal as 'Stock_Total',  
+    c.whltotal as 'Stock_Total',
     d.Shelfname as 'PickLocation',
     d.additionalinfo as 'PickStockLevel',
     (e.stock + e.stockminimum) as 'LinnworksStock',
@@ -79,8 +79,8 @@ SELECT
     f.weekly as 'Weekly',
     ((c.whltotal-(e.stock + e.stockminimum))*g.SupplierPricePer) as 'DifferenceNet'
 FROM whldata.whlnew as a
-LEFT JOIN (SELECT Sku, Sum(additionalinfo*CAST(substring(sku,8,4) as signed integer)) as 'whltotal' from whldata.sku_locations group by substring(sku,1,7)) as c on a.Sku=c.sku
-LEFT JOIN (SELECT Sku, Shelfname, Sum(additionalinfo*CAST(substring(sku,8,4) as signed integer)) as additionalinfo FROM whldata.sku_locations JOIN whldata.locationreference on sku_locations.LocationRefID=locationreference.LocID WHERE LocType=1 Group by substring(sku,1,7)) as d on a.Sku=d.Sku
+LEFT JOIN (SELECT shortsku, stocklevel as 'whltotal' from whldata.shortsku_locations) as c on a.Sku=c.shortsku
+LEFT JOIN (SELECT shortsku, Shelfname, stocklevel as additionalinfo FROM whldata.shortsku_locations JOIN whldata.locationreference on sku_locations.LocationRefID=locationreference.LocID WHERE LocType=1) as d on a.Sku=d.shortsku
 LEFT JOIN whldata.inventory as e on a.Sku=e.Sku
 LEFT JOIN (SELECT Sku, SUBSTRING(Sku,1,7) as Shortsku, SUM(Weighted8Week*CAST(SUBSTRING(Sku,8,4) as SIGNED INTEGER)) as weekly FROM whldata.salesdata GROUP BY SUBSTRING(Sku,1,7)) as f on a.Shortsku=F.Shortsku
 LEFT JOIN (SELECT * FROM whldata.Sku_Supplierdata WHERE isPrimary='True' GROUP BY sku) as g on a.shortsku = g.Sku
@@ -88,7 +88,7 @@ WHERE 	(NOT New_Status='Dead') AND  (IsListed='True' OR Packsize=1) AND (NOT a.I
 
 ")
 
-        Dim Locations As List(Of Dictionary(Of String, Object)) = MySQL.SelectDataDictionary("SELECT shelfname, Sku, substring(sku,1,7) as ShortSku, SUM(additionalInfo*CAST(SUBSTRING(Sku,8,4) as signed integer)) as additionalinfo, locationRefID, if(locType=0,99,locType) as 'type',locWarehouse as Warehouse FROM whldata.sku_locations as a JOIN whldata.locationReference as b on b.locId=a.LocationRefId WHERE NOT locType=1 group by shortsku, shelfname;")
+        Dim Locations As List(Of Dictionary(Of String, Object)) = MySQL.SelectDataDictionary("SELECT shelfname, shortsku as Sku, substring(ShortSku,1,7) as ShortSku, stocklevel as additionalinfo, LocationId, if(locType=0,99,locType) as 'type',locWarehouse as Warehouse FROM whldata.shortsku_locations as a JOIN whldata.locationReference as b on b.locId=a.LocationRefId WHERE NOT locType=1 group by shortsku, shelfname;")
 
         Dim Fields As New List(Of String)
         Fields.Add("sku")
