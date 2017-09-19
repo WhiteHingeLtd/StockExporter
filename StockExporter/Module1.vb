@@ -3,13 +3,19 @@
 Module Module1
 
     Sub Main()
-
+        AddHandler System.AppDomain.CurrentDomain.UnhandledException, AddressOf UnhandledExceptionHandler
         Console.WriteLine("Stock Replenishment CSV Exporter.")
         Console.WriteLine("This program is good for the enivronment - It was made with 94% Recycled code.")
         LocationsWithStockProdutProxy()
         LocationsWithStockVariantProxy()
         Console.WriteLine("Jobs done. Have a nice day!")
         Threading.Thread.Sleep(10000)
+    End Sub
+
+    Private Sub UnhandledExceptionHandler(sender As Object, e As UnhandledExceptionEventArgs)
+        Reporting.ReportException(e.ExceptionObject,false,false)
+        System.Diagnostics.Process.Start(Environment.CommandLine)
+        Environment.Exit(1)
     End Sub
 
     Private Sub SaveCSV(Data As  List(Of Dictionary(Of String, Object)), Filename as String )
